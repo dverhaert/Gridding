@@ -1,6 +1,6 @@
 This is a MATLAB program which convolves radio-telescope data onto the grid, one of the most time-consuming processing steps to create a sky image. 
 
-## W-projection explanation
+### W-projection explanation
 
 The first step of the process is pair of antennas sampling the electromagnetic spectrum at a high rate. The integrated product of such a sample is called a visibility, and has an associated (u,v,w) coordinate, depending on the position of the antennas, the position of the observed source, the frequency of te observed signal and the time. The (u,v,w) coordinates for an antenna pair change over time due to rotation of the earth.
 
@@ -12,7 +12,7 @@ This would be all that is necessary when the earth and the observed part of the 
 
 This code basically does the gridding step: it puts every visibility or (u,v,w) point on a grid point and makes it contribute to neighboring grid points by using a convolution matrix dependent on w. It is also able to do the inverse process: converting a grid back to visibilities.
 
-Code explanation
+### Code explanation
 
 
 Choosing the oversampling mode leads to the support kernel having a much 
