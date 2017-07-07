@@ -1,6 +1,6 @@
 This is a MATLAB program which convolves radio-telescope data onto the grid, one of the most time-consuming processing steps to create a sky image. 
 
-W-projection explanation
+\textbf{W-projection explanation}
 The first step of the process is pair of antennas sampling the electromagnetic spectrum at a high rate. The integrated product of such a sample is called a visibility, and has an associated (u,v,w) coordinate, depending on the position of the antennas, the position of the observed source, the frequency of te observed signal and the time. The (u,v,w) coordinates for an antenna pair change over time due to rotation of the earth.
 
 Since the visibilities are sampled in the Fourier domain, the next step is to perform an inverse Fourier transform operation to create a sky image. However, with a lot of data this process consumes an exorbitant amount of time. Therefore these visibilities are first placed on a UV-grid. A two-dimensional FFT can then be used, converting the UV-grid to a sky image in a much more effective fashion. 
