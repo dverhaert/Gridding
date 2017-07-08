@@ -16,3 +16,6 @@ This code basically does the gridding step: it puts every visibility or (u,v,w) 
 
 
 Choosing the oversampling mode leads to the support kernel having a much 
+
+
+Generally, oversampling is slightly faster than interpolating. Testing some data we noticed that generally the oversampling mode was about 1,5-2x faster. This can be explained by the extra computations done in the most computationally intensive innter loop of the code.
