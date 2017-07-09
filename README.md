@@ -23,4 +23,5 @@ Generally, oversampling is slightly faster than interpolating. Testing some data
 
 
 [1] J. W. Romein. An Efficient Work-Distribution Strategy for Gridding Radio-Telescope Data on GPUs. *ACM, ICS'12*, 2012.
+
 [2] T.J. Cornwell. The impact of convolutional resampling on ASKAP and SKA Phase 1 computing costs. *CONRAD-SW-0008*, 2007.
