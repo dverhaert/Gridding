@@ -44,12 +44,20 @@ The index we will update in the grid is equal to the integer value of a point pl
 
 Finally, after this process is repeated for every grid point, the grid is flipped so that _v_ is not inverted and the result is plotted.
 
-### Mode 2: W-projection mode
+# STILL TYPING HERE
 
+### Mode 2: W-projection mode
+#### Generating the kernel
+
+
+#### Gridding
 
 
 ### Mode 3: Interpolation code
+#### Generating the kernel
 
+
+#### Gridding
 
 
 
