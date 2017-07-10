@@ -19,7 +19,7 @@ load('UVWmatlab');
 %% MODE SELECT
 % mode = 1 for simple, mode = 2 for w-projection and mode = 3 for
 % interpolation.
-mode = 2;
+mode = 1;
 
 % Size of support kernel
 oversample = 8; % Number of times we're oversampling
@@ -83,6 +83,7 @@ for bl = 1:nbaselines
     for time = 1:ntimesteps
         for ch = 1:nchan
             visibilities(bl,time,ch) = vis;
+            %= visibilities((time-1)*nbaselines + bl, ch);
         end
     end
 end
