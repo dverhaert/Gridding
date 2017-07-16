@@ -49,28 +49,28 @@ Finally, after this process is repeated for every grid point, the resulting grid
 The w-projection kernel has three dimensions, it can be seen as a two-dimensional kernel for different values of _w_. The formula to generate the support changes to the following one:
 
 *support(i,j,k) = exp(-((i-ccenter)^2 + (j-ccenter)^2)/(k\*fScale));* (2)
-*With fScale = sqrt(abs(w)\*wcellsize\*frequencies(1))/cellsize;* (3)
+
+*fScale = sqrt(abs(w)\*wcellsize\*frequencies(1))/cellsize;* (3)
 
 This extra scaling factor added makes it so that the kernel will decay normally with low values of _w_, but will will decay at a much slower rate with higher values of _w_. This means that, for example in the highest _w_-plane in the 9x9 example, the value at the edge will be 0.8862 (instead of 0.0004!). 
 
 
-
-
 #### Gridding
+Generally, the gridding procedure is the same as the one for the simple mode. This time all data columns are taken and the *u*, *v* and *w* coordinates are scaled according to the defined frequency and cellsize and their fractional part is determined. In the gridding procedure again the grid is determined by convolving the two-dimensional (*u,v*) support kernel with every visibility, but this time instead of using one fixed kernel it depends on the value of *w*. Again, the results are added to the grid and the result is plotted.
 
-
-### Mode 3: Interpolation code
+### Mode 3: Interpolation mode
 #### Generating the kernel
-
+The third implemented mode is the interpolation mode. The key difference of this mode is explained in the gridding part of this section. The kernel is generated in the same way as in mode 2 but without oversampling, so it's a three-dimensional matrix of which the size will be much smaller. 
 
 #### Gridding
 
+The gridding procedure for the interpolation mode starts in the same way as the w-projection: all data columns are taken and the *u*, *v* and *w* coordinates are scaled according to the defined frequency and cellsize and their fractional part is determined. 
 
+The key difference is that instead of expanding the support kernel and moving over this kernel depending on the fractional part of *u* and *v* as we did in the previous w-projection mode, one accounts for a point in proportion to it's fraction. For example, if a *u*-coordinate is equal to 119.9, we perform the the gridding operation with the smaller (non-oversampled) kernel for *u*-coordinates of both 119 and 120. However, the operation for the point 119 will only be counted 0.1 times, while the operation for the point 120 will be counted 0.9 times. This way, a point is weighted much more when the fraction is near it. Recall that with the use of oversampling in the previous modes the support kernel is made bigger and we go over points depending on the fraction, while here in the interpolation mode we keep the original support kernel size but perform the computation for multiple points. Since we can have fractions in the *u*, *v* and *w* directions, this implies a total of 2^3 = 8 computations for every grid point (instead of one with an oversampled support kernel).
 
-Choosing the oversampling mode leads to the support kernel having a much 
+So basically, in return for having to make much more computations per grid point we have a much smaller kernel. 
 
-
-Generally, oversampling is slightly faster than interpolating. Testing some data we noticed that generally the oversampling mode was about 1,5-2x faster. This can be explained by the extra computations done in the most computationally intensive innter loop of the code.
+When oversampling with a small factor this is quite a bit faster than interpolating. However with large oversampling factors interpolating becomes more efficient.  Testing some data we noticed that generally the oversampling mode was about 1,5-2x faster. This can be explained by the extra computations done in the most computationally intensive innter loop of the code.
 
 
 [1] J. W. Romein. An Efficient Work-Distribution Strategy for Gridding Radio-Telescope Data on GPUs. *ACM, ICS'12*, 2012.
