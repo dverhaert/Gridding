@@ -71,7 +71,7 @@ The key difference is that instead of expanding the support kernel and moving ov
 Basically, in return for having to make much more computations per grid point we have a much smaller kernel. When oversampling with a small factor this is quite a bit faster (although less precise) than interpolating. However with large oversampling factors interpolating becomes more efficient.  
 
 ### Degridding
-Degridding is basically the gridding process, but ran in reverse. For every point, we look at the points around that point according to the size of the support kernel and add the sum of these values. Finally, we divide by the sum of the support kernel. Note that this leads to very different visibilities than input into the gridding function:  To obtain correct visibilities, a more advanced algorithm has to be used.
+Degridding is basically the gridding process, but ran in reverse. For every point, we look at the points around that point according to the size of the support kernel and add the sum of these values. Finally, we divide by the sum of the support kernel. Note that this leads to very different visibilities in comparison to those input into the gridding function:  To obtain correct visibilities, a more advanced algorithm has to be used.
 
 
 [1] J. W. Romein. An Efficient Work-Distribution Strategy for Gridding Radio-Telescope Data on GPUs. *ACM, ICS'12*, 2012.
