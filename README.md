@@ -46,7 +46,7 @@ Finally, after this process is repeated for every grid point, the resulting grid
 
 ### Mode 2: W-projection mode
 #### Generating the kernel
-The w-projection kernel has three dimensions, it can be seen as a two-dimensional kernel for different values of _w_. The formula to generate the support changes to the following one:
+The support kernel for the w-projection mode has three dimensions, it can be seen as a two-dimensional kernel for different values of _w_. The formula to generate the support changes to the following one:
 
 *support(i,j,k) = exp(-((i-ccenter)^2 + (j-ccenter)^2)/(k\*fScale));* (2)
 
