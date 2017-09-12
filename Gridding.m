@@ -14,7 +14,8 @@
 
 close all
 clear all
-load('UVWmatlab');
+load('uvw');
+UVW = uvw*20; % Fix UVW so picture is more detailed
 
 %% MODE SELECT
 % mode = 1 for simple, mode = 2 for w-projection and mode = 3 for
@@ -24,21 +25,23 @@ mode = 1;
 % Size of support kernel
 oversample = 8; % Number of times we're oversampling
 supportsize = 3; % Support for gridding function in pixels
-cellsize = 1.08*13107.2/2048; % Cellsize of output grid in wavelengths as defined in Romein. cellsize in Cornwell is 50.
 gridsize = 2048; % Size of the grid
+cellsize = 1.08*13107.2/2048; % Cellsize of output grid in wavelengths as defined in Romein. cellsize in Cornwell is 50.
 nchan = 16; % Number of channels
 
 % Note that these next three variables are set to match with the dataset of
 % visibilities. In the basic case, there are a certain number of
-% baselines, all measuring in certain timesteps and blocks of these 
+% baselines, all measuring in certain timesteps and blocks of these
 % timesteps. When your visibilities are not defined by baselines,
 % timesteps and blocks, either set the multiple of these variables to the
 % number of points in your dataset or edit the code so it loops from 1
-% until your number of data points.
+% until your number of data points like this:
+% nsamples =  height(UVW);
+% Note that you will need to edite more of the code to achieve this.
 
 nbaselines = 946; % Number of baselines
 ntimesteps = 20; % Number of timesteps present in the visibilities
-nblocks = 100; % Number of 'blocks' of visibility data
+nblocks = 170; % Number of 'blocks' of visibility data
 
 speed_of_light = 299792458;
 tic; % Start timing
@@ -61,14 +64,14 @@ csize = 2*(supportsize + 1)*oversample+1; % Size of support matrix
 support(csize,csize) = 0;
 ccenter = (csize+1)/2; % Center of support matrix
 
-%% Initfrequencies
+%% Initlabda
 
 % Radio frequency spectrum we want to use for UVW projection is around 30 MHz - 10 GHZ
 % Romein uses +-60 MHz
 % Cornwell uses +-1,4 GHz
 for ch = 1:nchan
     % Tweak this frequency depending on your baseline
-    frequencies(ch) = (59908828.7353515625 + 12207.03125 *(ch-1))/speed_of_light;
+    labda(ch) = (59908828.7353515625 + 12207.03125 *(ch-1))/speed_of_light;
 end
 
 %% initVisibilities
@@ -106,53 +109,44 @@ if mode == 1
 elseif mode == 2
     % Generates the csize*csize*wsize kernel support
     for k = 1:wsize
+        w = k-wsize/2;
+        % This if statement makes sure that there will be no w-plane that
+        % is zero (by removing abs(w) from the equation)
         if(k == wsize/2)
-            for j = 1:csize
-                j2 = ((j-ccenter)/oversample)^2;
-                for i = 1:csize
-                    r2 = j2 + ((i-ccenter)/oversample)^2;
-                    support(i,j,k) = exp(-r2);
-                end
-            end
+            fScale = sqrt(wcellsize*labda(1))/cellsize;
         else
-            w = k-wsize/2;
-            fScale = sqrt(abs(w)*wcellsize*frequencies(1))/cellsize;
-            for j = 1:csize
-                j2 = ((j-ccenter)/oversample)^2;
-                for i = 1:csize
-                    r2 = j2 + ((i-ccenter)/oversample)^2;
-                    support(i,j,k) = exp(-r2/(k*fScale));
-                end
+            fScale = sqrt(abs(w)*wcellsize*labda(1))/cellsize;
+        end
+        for j = 1:csize
+            j2 = ((j-ccenter)/oversample)^2;
+            for i = 1:csize
+                r2 = j2 + ((i-ccenter)/oversample)^2;
+                support(i,j,k) = exp(-r2/(k*fScale));
             end
         end
     end
     
     % Interpolation gridding
-elseif mode ==3
+elseif mode == 3
     % Generates the csize*csize*wsize kernel support
     % Note that csize is much smaller in comparison to oversampling mode.
     for k = 1:wsize
+        w = k-wsize/2;
+        % This if statement makes sure that there will be no w-plane that
+        % is zero (by removing abs(w) from the equation)
         if(k == wsize/2)
-            for j = 1:csize
-                j2 = (j-ccenter)^2;
-                for i = 1:csize
-                    r2 = j2 + ((i-ccenter))^2;
-                    support(i,j,k) = exp(-r2);
-                end
-            end
+            fScale = sqrt(wcellsize*labda(1))/cellsize;
         else
-            w = k-wsize/2;
-            fScale = sqrt(abs(w)*wcellsize*frequencies(1))/cellsize;
-            for j = 1:csize
-                j2 = ((j-ccenter))^2;
-                for i = 1:csize
-                    r2 = j2 + ((i-ccenter))^2;
-                    support(i,j,k) = exp(-r2/(k*fScale));
-                end
+            fScale = sqrt(abs(w)*wcellsize*labda(1))/cellsize;
+        end
+        for j = 1:csize
+            j2 = ((j-ccenter))^2;
+            for i = 1:csize
+                r2 = j2 + ((i-ccenter))^2;
+                support(i,j,k) = exp(-r2/(k*fScale));
             end
         end
     end
-    
 end
 
 
@@ -168,11 +162,11 @@ if mode == 1
     UVWu_scaled(nblocks*ntimesteps*nbaselines,nchan) = 0;
     UVWv_scaled(nblocks*ntimesteps*nbaselines,nchan) = 0;
     
-
+    
     
     for ch = 1: nchan
-        UVWu_scaled(:,ch) = frequencies(ch)*UVWuv(:,1)/cellsize;
-        UVWv_scaled(:,ch) = frequencies(ch)*UVWuv(:,2)/cellsize;
+        UVWu_scaled(:,ch) = labda(ch)*UVWuv(:,1)/cellsize;
+        UVWv_scaled(:,ch) = labda(ch)*UVWuv(:,2)/cellsize;
         %axis([-1024, 1024, -1024, 1024]);
         % Plot v against u
         plot(UVWu_scaled(:,ch),UVWv_scaled(:,ch),'.')
@@ -228,16 +222,16 @@ elseif mode == 2
     UVWuvw = UVWuvwzeros;
     
     %Or if you want remove all zero entrys:
-    %UVWuvw = UVWuvwzeros(any(UVWuvwzeros,2),:);
+    UVWuvwnozeros = UVWuvwzeros(any(UVWuvwzeros,2),:);
     
     UVWu_scaled(nblocks*ntimesteps*nbaselines,nchan) = 0;
     UVWv_scaled(nblocks*ntimesteps*nbaselines,nchan) = 0;
     UVWw_scaled(nblocks*ntimesteps*nbaselines,nchan) = 0;
-
+    
     for ch = 1: nchan
-        UVWu_scaled(:,ch) = frequencies(ch)*UVWuvw(:,1)/cellsize;
-        UVWv_scaled(:,ch) = frequencies(ch)*UVWuvw(:,2)/cellsize;
-        UVWw_scaled(:,ch) = frequencies(ch)*UVWuvw(:,3)/wcellsize;
+        UVWu_scaled(:,ch) = labda(ch)*UVWuvw(:,1)/cellsize;
+        UVWv_scaled(:,ch) = labda(ch)*UVWuvw(:,2)/cellsize;
+        UVWw_scaled(:,ch) = labda(ch)*UVWuvw(:,3)/wcellsize;
         plot(UVWu_scaled(:,ch),UVWv_scaled(:,ch),'.')
         hold on;
     end
@@ -300,9 +294,9 @@ elseif mode == 3
     UVWw_scaled(nblocks*ntimesteps*nbaselines,nchan) = 0;
     
     for ch = 1: nchan
-        UVWu_scaled(:,ch) = frequencies(ch)*UVWuvw(:,1)/cellsize;
-        UVWv_scaled(:,ch) = frequencies(ch)*UVWuvw(:,2)/cellsize;
-        UVWw_scaled(:,ch) = frequencies(ch)*UVWuvw(:,3)/wcellsize;
+        UVWu_scaled(:,ch) = labda(ch)*UVWuvw(:,1)/cellsize;
+        UVWv_scaled(:,ch) = labda(ch)*UVWuvw(:,2)/cellsize;
+        UVWw_scaled(:,ch) = labda(ch)*UVWuvw(:,3)/wcellsize;
         plot(UVWu_scaled(:,ch),UVWv_scaled(:,ch),'.')
         hold on;
     end
@@ -377,12 +371,12 @@ elseif mode == 3
     
 end
 
-%% Degridding
-
-% Degrid a simple UV-grid. Note that this doesn't give you back the
-% exact same visibilities, since when there are a lot of zeroes the
-% center of your dataset this becomes hard to retrieve except by using
-% an advanced algorithm.
+% %% Degridding
+% 
+% % Degrid a simple UV-grid. Note that this doesn't give you back the
+% % exact same visibilities, since when there are a lot of zeroes the
+% % center of your dataset this becomes hard to retrieve except by using
+% % an advanced algorithm.
 % if mode == 1
 %     UVWuvzeros(:,1:2) = UVW(1:nblocks*ntimesteps*nbaselines,1:2);
 %     UVWuv = UVWuvzeros;
@@ -391,8 +385,8 @@ end
 %     %UVWuv = UVWuvzeros(any(UVWuvzeros,2),:);
 %     
 %     for ch = 1: nchan
-%         UVWu_scaled(:,ch) = frequencies(ch)*UVWuv(:,1)/cellsize;
-%         UVWv_scaled(:,ch) = frequencies(ch)*UVWuv(:,2)/cellsize;
+%         UVWu_scaled(:,ch) = labda(ch)*UVWuv(:,1)/cellsize;
+%         UVWv_scaled(:,ch) = labda(ch)*UVWuv(:,2)/cellsize;
 %     end
 %     
 %     data(1:nblocks*ntimesteps*nbaselines, nchan) = 0;
@@ -446,9 +440,9 @@ end
 %     %UVWuvw = UVWuvwzeros(any(UVWuvwzeros,2),:);
 %     
 %     for ch = 1: nchan
-%         UVWu_scaled(:,ch) = frequencies(ch)*UVWuvw(:,1)/cellsize;
-%         UVWv_scaled(:,ch) = frequencies(ch)*UVWuvw(:,2)/cellsize;
-%         UVWw_scaled(:,ch) = frequencies(ch)*UVWuvw(:,3)/wcellsize;
+%         UVWu_scaled(:,ch) = labda(ch)*UVWuvw(:,1)/cellsize;
+%         UVWv_scaled(:,ch) = labda(ch)*UVWuvw(:,2)/cellsize;
+%         UVWw_scaled(:,ch) = labda(ch)*UVWuvw(:,3)/wcellsize;
 %     end
 %     
 %     data(1:nblocks*ntimesteps*nbaselines, nchan) = 0;
