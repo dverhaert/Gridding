@@ -15,12 +15,17 @@
 close all
 clear all
 load('uvw');
+% If the grid you are seeing is very pixellated, try to add a factor to
+% this next variable (for example: UWV = uvw * 20)! This occurs because
+% grid points are rounded towards the nearest integer, so there has to be
+% some significant differences between visibilities to differentiate them
+% from eachother. 
 UVW = uvw*20; % Fix UVW so picture is more detailed
 
 %% MODE SELECT
 % mode = 1 for simple, mode = 2 for w-projection and mode = 3 for
 % interpolation.
-mode = 1;
+mode = 2;
 
 % Size of support kernel
 oversample = 8; % Number of times we're oversampling
@@ -77,7 +82,7 @@ end
 %% initVisibilities
 
 % Just for the sake of testing all visibilities are set to 1 at the moment.
-% These can of course be loaded from the database.\
+% These can of course be loaded from the database.
 
 visibilities(nbaselines,ntimesteps,nchan) = 0;
 vis = 1;
@@ -371,125 +376,125 @@ elseif mode == 3
     
 end
 
-% %% Degridding
-% 
-% % Degrid a simple UV-grid. Note that this doesn't give you back the
-% % exact same visibilities, since when there are a lot of zeroes the
-% % center of your dataset this becomes hard to retrieve except by using
-% % an advanced algorithm.
-% if mode == 1
-%     UVWuvzeros(:,1:2) = UVW(1:nblocks*ntimesteps*nbaselines,1:2);
-%     UVWuv = UVWuvzeros;
-%     
-%     %Or if you want remove all zero entries:
-%     %UVWuv = UVWuvzeros(any(UVWuvzeros,2),:);
-%     
-%     for ch = 1: nchan
-%         UVWu_scaled(:,ch) = labda(ch)*UVWuv(:,1)/cellsize;
-%         UVWv_scaled(:,ch) = labda(ch)*UVWuv(:,2)/cellsize;
-%     end
-%     
-%     data(1:nblocks*ntimesteps*nbaselines, nchan) = 0;
-%     
-%     fprintf('The program will go over a total of %d data samples for every channel. \n', nblocks*ntimesteps*nbaselines);
-%     fprintf('Degridding...\n');
-%     % Over all data points (defined as blocks*baselines*timesteps) and for
-%     % each corresponding channel
-%     for block = 1:nblocks
-%         for bl = 1:nbaselines
-%             for time = 1:ntimesteps
-%                 for ch = 1:nchan
-%                     
-%                     sumviswt = 0;
-%                     i = ((block-1) * ntimesteps + time-1)*nbaselines + bl;
-%                     
-%                     uscaled = UVWu_scaled(i, ch);
-%                     % Matlab command 'fix' rounds to zero.
-%                     iu = fix(uscaled);
-%                     fracu = fix(oversample*(uscaled-iu));
-%                     % Index of the point when rounded and moved to the
-%                     % center of the grid
-%                     iu = iu + gridsize/2;
-%                     % Index required for support matrix
-%                     uindex = fracu + ccenter;
-%                     
-%                     vscaled = UVWv_scaled(i, ch);
-%                     iv = fix(vscaled);
-%                     fracv = fix(oversample*(vscaled-iv));
-%                     iv = iv + gridsize/2;
-%                     vindex = fracv + ccenter;
-%                     
-%                     for suppv = -supportsize:supportsize
-%                         for suppu = -supportsize:supportsize
-%                             data(i,ch) =  data(i,ch) + support(uindex + suppu,vindex + suppv)*grid(iv + suppv, iu + suppu);
-%                             sumviswt = sumviswt + support(uindex + suppu,vindex + suppv);
-%                         end
-%                     end
-%                     data(i,ch) = data(i,ch)/sumviswt;
-%                 end
-%             end
-%         end
-%     end
-%     
-%     %% Degrid a W-projected UV-grid
-% elseif mode == 2
-%     UVWuvwzeros(:,:) = UVW(1:nblocks*ntimesteps*nbaselines,:);
-%     UVWuvw = UVWuvwzeros;
-%     
-%     %Or if you want remove all zero entrys:
-%     %UVWuvw = UVWuvwzeros(any(UVWuvwzeros,2),:);
-%     
-%     for ch = 1: nchan
-%         UVWu_scaled(:,ch) = labda(ch)*UVWuvw(:,1)/cellsize;
-%         UVWv_scaled(:,ch) = labda(ch)*UVWuvw(:,2)/cellsize;
-%         UVWw_scaled(:,ch) = labda(ch)*UVWuvw(:,3)/wcellsize;
-%     end
-%     
-%     data(1:nblocks*ntimesteps*nbaselines, nchan) = 0;
-%     
-%     fprintf('The program will go over a total of %d data samples for every channel. \n', nblocks*ntimesteps*nbaselines);
-%     fprintf('Degridding...\n');
-%     % Over all data points (defined as blocks*baselines*timesteps) and for
-%     % each corresponding channel
-%     for block = 1:nblocks
-%         for bl = 1:nbaselines
-%             for time = 1:ntimesteps
-%                 for ch = 1:nchan
-%                     
-%                     sumviswt = 0;
-%                     i = ((block-1) * ntimesteps + time-1)*nbaselines + bl;
-%                     
-%                     uscaled = UVWu_scaled(i, ch);
-%                     % Matlab command 'fix' rounds to zero.
-%                     iu = fix(uscaled);
-%                     fracu = fix(oversample*(uscaled-iu));
-%                     % Index of the point when rounded and moved to the
-%                     % center of the grid
-%                     iu = iu + gridsize/2;
-%                     % Index required for support matrix
-%                     uindex = fracu + ccenter;
-%                     
-%                     vscaled = UVWv_scaled(i, ch);
-%                     iv = fix(vscaled);
-%                     fracv = fix(oversample*(vscaled-iv));
-%                     iv = iv + gridsize/2;
-%                     vindex = fracv + ccenter;
-%                     
-%                     wscaled = UVWw_scaled(i, ch);
-%                     windex = fix(wscaled) + wsize/2;
-%                     
-%                     for suppv = -supportsize:supportsize
-%                         for suppu = -supportsize:supportsize
-%                             data(i,ch) =  data(i,ch) + support(uindex + suppu,vindex + suppv, windex)*grid(iv + suppv, iu + suppu);
-%                             sumviswt = sumviswt + support(uindex + suppu,vindex + suppv, windex);
-%                         end
-%                     end
-%                     data(i,ch) = data(i,ch)/sumviswt;
-%                 end
-%             end
-%         end
-%     end
-% end
+%% Degridding
+
+% Degrid a simple UV-grid. Note that this doesn't give you back the
+% exact same visibilities, since when there are a lot of zeroes the
+% center of your dataset this becomes hard to retrieve except by using
+% an advanced algorithm.
+if mode == 1
+    UVWuvzeros(:,1:2) = UVW(1:nblocks*ntimesteps*nbaselines,1:2);
+    UVWuv = UVWuvzeros;
+    
+    %Or if you want remove all zero entries:
+    %UVWuv = UVWuvzeros(any(UVWuvzeros,2),:);
+    
+    for ch = 1: nchan
+        UVWu_scaled(:,ch) = labda(ch)*UVWuv(:,1)/cellsize;
+        UVWv_scaled(:,ch) = labda(ch)*UVWuv(:,2)/cellsize;
+    end
+    
+    data(1:nblocks*ntimesteps*nbaselines, nchan) = 0;
+    
+    fprintf('The program will go over a total of %d data samples for every channel. \n', nblocks*ntimesteps*nbaselines);
+    fprintf('Degridding...\n');
+    % Over all data points (defined as blocks*baselines*timesteps) and for
+    % each corresponding channel
+    for block = 1:nblocks
+        for bl = 1:nbaselines
+            for time = 1:ntimesteps
+                for ch = 1:nchan
+                    
+                    sumviswt = 0;
+                    i = ((block-1) * ntimesteps + time-1)*nbaselines + bl;
+                    
+                    uscaled = UVWu_scaled(i, ch);
+                    % Matlab command 'fix' rounds to zero.
+                    iu = fix(uscaled);
+                    fracu = fix(oversample*(uscaled-iu));
+                    % Index of the point when rounded and moved to the
+                    % center of the grid
+                    iu = iu + gridsize/2;
+                    % Index required for support matrix
+                    uindex = fracu + ccenter;
+                    
+                    vscaled = UVWv_scaled(i, ch);
+                    iv = fix(vscaled);
+                    fracv = fix(oversample*(vscaled-iv));
+                    iv = iv + gridsize/2;
+                    vindex = fracv + ccenter;
+                    
+                    for suppv = -supportsize:supportsize
+                        for suppu = -supportsize:supportsize
+                            data(i,ch) =  data(i,ch) + support(uindex + suppu,vindex + suppv)*grid(iv + suppv, iu + suppu);
+                            sumviswt = sumviswt + support(uindex + suppu,vindex + suppv);
+                        end
+                    end
+                    data(i,ch) = data(i,ch)/sumviswt;
+                end
+            end
+        end
+    end
+    
+    %% Degrid a W-projected UV-grid
+elseif mode == 2
+    UVWuvwzeros(:,:) = UVW(1:nblocks*ntimesteps*nbaselines,:);
+    UVWuvw = UVWuvwzeros;
+    
+    %Or if you want remove all zero entrys:
+    %UVWuvw = UVWuvwzeros(any(UVWuvwzeros,2),:);
+    
+    for ch = 1: nchan
+        UVWu_scaled(:,ch) = labda(ch)*UVWuvw(:,1)/cellsize;
+        UVWv_scaled(:,ch) = labda(ch)*UVWuvw(:,2)/cellsize;
+        UVWw_scaled(:,ch) = labda(ch)*UVWuvw(:,3)/wcellsize;
+    end
+    
+    data(1:nblocks*ntimesteps*nbaselines, nchan) = 0;
+    
+    fprintf('The program will go over a total of %d data samples for every channel. \n', nblocks*ntimesteps*nbaselines);
+    fprintf('Degridding...\n');
+    % Over all data points (defined as blocks*baselines*timesteps) and for
+    % each corresponding channel
+    for block = 1:nblocks
+        for bl = 1:nbaselines
+            for time = 1:ntimesteps
+                for ch = 1:nchan
+                    
+                    sumviswt = 0;
+                    i = ((block-1) * ntimesteps + time-1)*nbaselines + bl;
+                    
+                    uscaled = UVWu_scaled(i, ch);
+                    % Matlab command 'fix' rounds to zero.
+                    iu = fix(uscaled);
+                    fracu = fix(oversample*(uscaled-iu));
+                    % Index of the point when rounded and moved to the
+                    % center of the grid
+                    iu = iu + gridsize/2;
+                    % Index required for support matrix
+                    uindex = fracu + ccenter;
+                    
+                    vscaled = UVWv_scaled(i, ch);
+                    iv = fix(vscaled);
+                    fracv = fix(oversample*(vscaled-iv));
+                    iv = iv + gridsize/2;
+                    vindex = fracv + ccenter;
+                    
+                    wscaled = UVWw_scaled(i, ch);
+                    windex = fix(wscaled) + wsize/2;
+                    
+                    for suppv = -supportsize:supportsize
+                        for suppu = -supportsize:supportsize
+                            data(i,ch) =  data(i,ch) + support(uindex + suppu,vindex + suppv, windex)*grid(iv + suppv, iu + suppu);
+                            sumviswt = sumviswt + support(uindex + suppu,vindex + suppv, windex);
+                        end
+                    end
+                    data(i,ch) = data(i,ch)/sumviswt;
+                end
+            end
+        end
+    end
+end
 
 %% No degridding for interpolation implemented (yet).
 fprintf('All done!\n');
