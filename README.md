@@ -21,9 +21,9 @@ At the top of the code the user is able to choose a *mode*. This *mode* variable
 
 After that, many variables can be customized depending on the user's requirements. The first value to be set is *oversampling*. Oversampling is the process of making the support kernel more dense in comparison to the grid it's in. This way, instead of (u,v) coordinates simply being rounded to the nearest integer, they get scaled according to their fraction depending on how many times we're oversampling. Oversampling with a factor 2 makes (u,v) coordinates round to halves, with a factor 3 to thirds etc. This way, the accuracy is improved since we look at fractions more carefully but the computation time will be longer.
 
-Next, some variables can be set to tweak the program as desired. These determine the size of the support kernel, the size of the total grid, the number of frequency channels, and the number of points taken from the dataset. Real (*u,v,w*) coordinates from a six-hour LOFAR observation with 44 antennas (946 baselines, 10s integration time and one subband of 16 frequency channels) were \ as taken from [1]. These are further subdivided in timesteps and blocks, but can be tweaked as necessary. 
+Next, some variables can be set to tweak the program as desired. These determine the size of the support kernel, the size of the total grid, the number of frequency channels, and the number of points taken from the dataset. Real (*u,v,w*) coordinates from a six-hour LOFAR observation with 44 antennas (946 baselines, 10s integration time and one subband of 16 frequency channels) were used as taken from [1]. These are further subdivided in timesteps and blocks, but can be tweaked as necessary. Also a scaling factor is applied so taht the points are adjusted to fit in a ([-1024, 1024, -1024, 1024]) grid.
 
-Frequencies are set, differing slightly for every channel. The frequencies in this case used are around 60 MHz, but of course any values can be used as long as they are in the radio frequency. After this, the values of the visibilities are set. In this example they are all set to one, but of course any (complex) value can be taken.
+Frequencies are set, differing slightly for every channel. The frequencies in this case used are around 60 MHz, but of course any values can be used as long as they are in the radio frequency. After this, the values of the visibilities are set. In this example they are all set to one, but of course any (complex) value can be taken, or a dataset of actual visibilities can be used.
 
 ### Mode 1: Simple mode
 #### Generating the kernel
@@ -36,7 +36,7 @@ Where ccenter is the center of the support kernel. With this formula, the center
 Formula (1) holds for the general case where we're not *oversampling*. In the case that we're oversampling, we add a scaling factor to it so that the values at the edges remain the same.
 
 #### Gridding
-Since no w-coordinates are used in the simple mode, just the first and second column of the data are taken. These *u* and *v* coordinates are scaled according to the defined frequency and cellsize. 
+Since no w-coordinates are used in the simple mode, just the first and second column of the data are taken. These *u* and *v* coordinates are scaled according to the defined frequency, cellsize and scaling factor. 
 
 Next the program enters its main execution loop, going over all data points. The current scaled _u_ and _v_ points are set to the variables _uscaled_ and _vscaled_ respectively. The fractional part of the current _u_ and _v_ coordinate is determined by first rounding and then computing the difference.
 
@@ -53,7 +53,6 @@ The support kernel for the w-projection mode has three dimensions, it can be see
 *fScale = sqrt(abs(w)\*wcellsize\*frequencies(1))/cellsize;* (3)
 
 This extra scaling factor added makes it so that the kernel will decay normally with low values of _w_, but will will decay at a much slower rate with higher values of _w_. This means that, for example in the highest _w_-plane in the 9x9 example, the value at the edge will be 0.8862 (instead of 0.0004 in the lowest w-plane!). 
-
 
 #### Gridding
 Generally, the gridding procedure is the same as the one for the simple mode. This time all data columns are taken and the *u*, *v* and *w* coordinates are scaled according to the defined frequency and cellsize and their fractional part is determined. In the gridding procedure again the grid is determined by convolving the two-dimensional (*u,v*) support kernel with every visibility, but this time instead of using one fixed kernel it depends on the value of *w*. Again, the results are added to the grid and the result is plotted.
